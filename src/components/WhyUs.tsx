@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion, useReducedMotion } from 'framer-motion';
-import whyNeighborhood from '../../public/images/why-neighborhood.webp';
+import whyNeighborhood from '@/assets/images/why-neighborhood.webp';
 import GradientField from './GradientField';
 import Icon from './Icons';
 import { Heading, Reveal, StaggerGrid, StaggerItem } from './motion-primitives';

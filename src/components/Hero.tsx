@@ -12,7 +12,7 @@ import {
   useSpring,
   useTransform,
 } from 'framer-motion';
-import heroHome from '../../public/images/hero-home.webp';
+import heroHome from '@/assets/images/hero-home.webp';
 import MagneticButton from './MagneticButton';
 import Marquee from './Marquee';
 import GradientField from './GradientField';

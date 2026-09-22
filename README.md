@@ -25,7 +25,7 @@ out/
   legal/privacy/index.html       … and the other seven policies
   404.html
   _next/                         css, js, fonts, hashed images
-  images/                        og-share.jpg (social card)
+  images/                        og-share.jpg (social card only)
 ```
 
 URLs are directory-style (`/legal/privacy/`), so hosts serve them from
@@ -74,11 +74,16 @@ are scoped to `lg` — the magnetic-button and 3D-tilt effects they support are
 skipped on touch anyway. That takes the blurred surface on a 320 px screen from
 ~12 megapixels down to ~1.9, with zero pinned compositor layers.
 
-`out/images/` also contains plain-named copies of the six section photographs.
-Nothing requests them — the pages use content-hashed copies under
-`_next/static/media/` for better caching — so they are safe to delete from the
-upload if you want a leaner folder. `og-share.jpg` must stay; the social card
-metadata points at it by URL.
+## Packaging the site as a zip
+
+```bash
+npm run build          # writes out/
+```
+
+Then zip the **contents** of `out/` (so `index.html` sits at the top level of
+the archive, not inside a folder). A prebuilt `hawaiian-telcom-site.zip` is
+produced this way: 53 files, 1.35 MB, with a `READ-ME-FIRST.txt` explaining
+upload for whoever receives it. Zip files are gitignored.
 
 ## Before you launch — three edits
 

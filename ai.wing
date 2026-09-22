@@ -805,3 +805,42 @@ VERCEL READINESS
 - No vercel.json needed: Vercel detects Next.js, runs the build and serves the
   exported out/ folder. No environment variables. The build touches no network,
   because the fonts are committed.
+
+================================================================================
+[3.2.0] 2026-09-22 — BUILD — Export slimmed; site packaged as a zip
+================================================================================
+Packaging the static site for handoff surfaced two problems in the export.
+
+1. INTERNAL DOCS WERE BEING PUBLISHED.
+   public/images/IMAGE-SPEC.md — notes on the image set, including the
+   AI-watermark caveat and the placeholder phone number — was copied into the
+   build and would have been readable at yourdomain.com/images/IMAGE-SPEC.md.
+   Everything in public/ is served verbatim; documentation does not belong there.
+
+2. EVERY SECTION PHOTOGRAPH SHIPPED TWICE.
+   The six photographs sat in public/, which Next copies wholesale, AND were
+   statically imported, which emits a separate content-hashed copy. The pages
+   only ever load the hashed copies — verified against the built HTML, which
+   references /_next/static/media/*.webp plus /images/og-share.jpg and nothing
+   else — so the plain-named set was 610 KB of dead weight in every build.
+
+FIX — moved the imported images out of the served directory:
+    src/assets/images/   the six section photographs (imported only)
+    public/images/       og-share.jpg alone, which needs a fixed URL because
+                         social scrapers fetch it by address from the metadata
+    IMAGES.md            the notes, now at the repo root and not served
+Import paths updated in Hero, WhyUs and page.tsx to use the @/assets alias.
+
+RESULT: export 59 files / 3.35 MB -> 52 files / 2.74 MB.
+Verified after the move: every image request returns 200, all headings visible,
+animations running, hero renders unchanged.
+
+ZIP — hawaiian-telcom-site.zip
+- 53 files, 2.68 MB uncompressed, 1.35 MB compressed. Integrity checked.
+- Archive paths are relative to out/, so index.html sits at the ROOT of the zip.
+  Hosts expect that on upload; a wrapping folder is the usual cause of a
+  "site uploaded but shows a directory listing" support call.
+- Includes READ-ME-FIRST.txt written for a non-developer: where to upload, the
+  warning not to open index.html off disk (assets are root-relative), the
+  subfolder caveat, and the three placeholders still to replace before launch.
+- *.zip added to .gitignore — it is a build artefact, reproducible from source.

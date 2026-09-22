@@ -8,10 +8,10 @@ import Faq from '@/components/Faq';
 import Footer from '@/components/Footer';
 import { bundlePlans, fiberPlans, phonePlans, tvPlans } from '@/lib/content';
 
-import fiberInstall from '../../public/images/fiber-install.webp';
-import bundleLivingRoom from '../../public/images/bundle-living-room.webp';
-import tvFioptics from '../../public/images/tv-fioptics.webp';
-import phoneKupuna from '../../public/images/phone-kupuna.webp';
+import fiberInstall from '@/assets/images/fiber-install.webp';
+import bundleLivingRoom from '@/assets/images/bundle-living-room.webp';
+import tvFioptics from '@/assets/images/tv-fioptics.webp';
+import phoneKupuna from '@/assets/images/phone-kupuna.webp';
 
 /**
  * Section order is fixed:
