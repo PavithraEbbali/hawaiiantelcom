@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Exact Hawaiian Telcom tokens */
+    --ht-blue: #4294f7;
+    --ht-navy: #012639;
+    --ht-ink: #101014;
+    --shell-pad: clamp(1.25rem, 4vw, 2.5rem);
+  }
+
+  * {
+    @apply border-ht-border-light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  /* Lenis drives scrolling once mounted; native smooth would fight it. */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  html.lenis {
+    scroll-behavior: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-white font-sans text-ht-slate antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display text-ht-ink;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--ht-blue);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ht-blue);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  section[id] {
+    scroll-margin-top: 7rem;
+  }
+}
+
+@layer components {
+  .shell {
+    @apply mx-auto w-full max-w-shell px-[var(--shell-pad)];
+  }
+
+  .eyebrow {
+    @apply text-eyebrow font-bold uppercase text-ht-blue;
+  }
+
+  .card {
+    @apply rounded-4xl border border-ht-border-light bg-white shadow-card;
+  }
+
+  /* Gradient travelling through clipped text.
+     The base rule paints solid brand blue. Only inside the @supports block does
+     the text become transparent, so a browser that cannot clip a background to
+     text still renders a readable headline rather than nothing at all — the
+     failure mode that background-clip:text invites if applied unconditionally. */
+  .text-gradient-sweep {
+    color: #4294f7;
+  }
+  @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .text-gradient-sweep {
+      /* Blues only, and deliberately so. The earlier mix ran through #22D3C5
+         and #3DC37F, which measure 1.88:1 and 2.26:1 against white — both below
+         the 3:1 WCAG minimum for large text. The rate line was genuinely
+         unreadable, not merely pale. Every stop below clears the threshold:
+         #4294F7 3.08:1, #005BB5 6.64:1, #072B6F 13.26:1. */
+      background-image: linear-gradient(
+        100deg,
+        #4294f7 0%,
+        #005bb5 24%,
+        #072b6f 46%,
+        #005bb5 70%,
+        #4294f7 100%
+      );
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: text-sweep 9s linear infinite;
+    }
+  }
+
+  /* Section heading block: eyebrow + title + lede on one tight rhythm, so
+     there is never a stray gap between the heading and the copy below it. */
+  .section-head {
+    @apply max-w-3xl;
+  }
+  .section-head .eyebrow + h2 {
+    @apply mt-3;
+  }
+  .section-head h2 + p {
+    @apply mt-4;
+  }
+}
+
+@layer utilities {
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Honour the OS-level reduced-motion preference across every animation.
+   Because entrance animations use fill-mode `both`, collapsing the duration
+   leaves them at their final, visible state rather than hiding them. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

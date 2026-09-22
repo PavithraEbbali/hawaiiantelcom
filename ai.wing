@@ -1,0 +1,750 @@
+# ai.wing — Change Log
+# Hawaiian Telcom Authorized Retailer — one-page landing site
+# Format: [VERSION] date — type — summary, followed by detail lines.
+# Types: SCAFFOLD | DATA | COMPONENT | SECTION | ANIMATION | STYLE | LEGAL | FIX | QA
+
+================================================================================
+[0.1.0] 2026-09-21 — SCAFFOLD — Project initialized
+================================================================================
+- Next.js 15 (App Router) + React 19 + TypeScript 5, src/ layout, @/* import alias.
+- Tailwind CSS 3.4 + PostCSS + Autoprefixer.
+- Dependencies added: lenis (smooth scroll), framer-motion (scroll/gesture motion).
+- create-next-app rejected the directory name ("Hawaiian Telcom" is not a valid
+  npm package name), so package.json and all configs were authored manually.
+- Files: package.json, tsconfig.json, next.config.mjs, postcss.config.mjs, .gitignore
+
+================================================================================
+[0.2.0] 2026-09-21 — DATA — Brand palette scraped from hawaiiantel.com
+================================================================================
+Colors read from live computed styles, not guessed:
+  #4294F7  primary CTA blue    (fill of "Check Availability" / "Shop Plans")
+  #012639  deep navy           (headline + secondary button ink)
+  #101014  near-black          (body ink)
+  #7D61B3  purple accent
+  #22D3C5 · #3DC37F · #FC8A52 · #F6D051 · #ED358E · #005BB5 · #072B6F  accent set
+- Built 11-step tonal ramps for blue and navy anchored on the exact brand hexes
+  (#4294F7 at blue-500, #012639 at navy-900).
+- Typeface: Hawaiian Telcom uses Gilroy (licensed, not redistributable).
+  Substituted Plus Jakarta Sans for display + Inter for body copy.
+- Signature gradient defined: bg-fiber-gradient (#4294F7 → #22D3C5 → #3DC37F).
+- Files: tailwind.config.ts
+
+================================================================================
+[0.3.0] 2026-09-21 — DATA — Service-line audit of hawaiiantel.com
+================================================================================
+Audited the live navigation and every service page. Result:
+  OFFERED     Fiber    — Fioptics 100 / 600 / 1 Gig / 3 Gig  ($30/40/50/80)
+  OFFERED     Bundles  — Internet + TV at $30/mo. each; Internet+TV+Phone builder
+  OFFERED     TV       — Fioptics+ Basic $30 / Advantage $90 / Advantage Plus $100
+  OFFERED     Phone    — myChoice Basic Plus $29.95/mo., Home Voicemail $7.99/mo.
+  NOT OFFERED Cable    — the network is 100% fiber; no cable line of business
+  NOT OFFERED Mobile   — absent from site navigation; no wireless product
+- Cable and Mobile sections are therefore OMITTED ENTIRELY from the page.
+  No placeholders, no empty states, no "call to ask" stubs.
+- Live promotions captured: 1 month free (1 Gig & 3 Gig), free activation,
+  free eero Pro 7 (3 Gig), 12 months of streaming via MyBundle (3 Gig),
+  Maui buildout ("From Wailuku to Kīpahulu").
+- Fine-print facts captured: eBill enrollment required for advertised rates;
+  Fioptics+ TV requires ≥400 Mbps internet; one receiver required per account;
+  1 Gig/3 Gig symmetrical not available at every address.
+
+================================================================================
+[0.4.0] 2026-09-21 — DATA — Centralized content architecture
+================================================================================
+- src/lib/content.ts is the SINGLE SOURCE OF TRUTH. Every price, speed, plan
+  name, feature bullet, promo line, FAQ and legal link on the site reads from it.
+  A rate change requires editing this file only — no component touches needed.
+- Exports the PlanItem interface exactly as specified, plus: site, navLinks,
+  hero, marqueeItems, fiberPlans, bundlePlans, tvPlans, phonePlans, finePrint,
+  features, faqs, legalPages.
+- ctaLabel(plan) enforces the CTA rule in one place: a plan with a numeric price
+  returns "Call to order"; a plan without one returns "Call for pricing".
+- site.salesPhone is a documented placeholder in the NANP reserved fictional
+  range (555-01xx) so no real party receives misdirected calls. MUST BE REPLACED
+  with the retailer's tracked sales number before launch.
+- Files: src/lib/content.ts
+
+================================================================================
+[0.5.0] 2026-09-21 — ANIMATION — Motion system
+================================================================================
+- SmoothScroll.tsx — Lenis, duration 1.1, exponential ease-out. Routes in-page
+  anchor clicks through Lenis for consistent easing. Disabled entirely under
+  prefers-reduced-motion; cancels its rAF loop and listeners on unmount.
+- motion-primitives.tsx — shared LUX_EASE cubic-bezier(0.22,1,0.36,1) plus:
+    Reveal       scroll-triggered fade/rise
+    TextReveal   word-by-word headline reveal, optional gradient accent offset
+    StaggerGrid  / StaggerItem — staggered grid entrances
+    Parallax     scroll-linked depth drift (transform only, GPU-composited)
+    ClipWipe     clip-path wipe transition between major sections
+- MagneticButton.tsx — cursor-tracking magnetic pull on spring physics, with a
+  sheen sweep on hover. Skipped for reduced-motion and coarse pointers.
+- PlanCard.tsx — 3D tilt on mouse-move via sprung rotateX/rotateY, preserve-3d
+  with the header/price/CTA lifted on translateZ, plus a cursor-tracking glare.
+- Marquee.tsx — infinite ticker; duplicated track translating -50% on the
+  compositor, no JS timer.
+- FiberPath.tsx — SVG path-draw (pathLength) of the symmetrical fiber run, with
+  two light pulses travelling in opposite directions to show 1:1 upload/download.
+- BlackHole.tsx — Canvas 2D deep-space hero backdrop: dark core, photon ring,
+  elliptical accretion band in the brand gradient, three-depth star field.
+  NOT a 3D spiral. Performance guards: DPR capped at 1.5, star glow pre-rendered
+  once into an offscreen sprite (avoids per-frame shadowBlur), particle counts
+  scale with viewport area, rAF halts on tab-hide and on IntersectionObserver
+  exit, single static frame under prefers-reduced-motion.
+- Global @media (prefers-reduced-motion: reduce) neutralizes all CSS animation.
+
+================================================================================
+[0.6.0] 2026-09-21 — COMPONENT — Universal price lockup
+================================================================================
+- PriceLockup.tsx — the one price treatment used everywhere on the site.
+  Raised dollar sign, large tabular integer (2.5rem at size="md", 3.5rem at
+  size="lg"), muted cents raised to the dollar-sign baseline, qualifier beneath.
+- Light and dark tones so the same component works on white and navy surfaces.
+- Plans with no numeric price render a "Custom" treatment on identical vertical
+  rhythm, so cards in a row never jump height.
+- Screen readers get a single spoken price string rather than fragmented digits.
+- Files: src/components/PriceLockup.tsx
+
+================================================================================
+[0.7.0] 2026-09-21 — SECTION — Page assembled in mandated order
+================================================================================
+Order locked in src/app/page.tsx:
+   1. DisclosureBar   persistent "Independent Authorized Retailer of Hawaiian Telcom."
+   2. Header          sticky, scroll-aware, anchor nav with active-section pill,
+                      "Call (XXX) XXX-XXXX" CTA, animated mobile sheet
+   3. Hero            black-hole backdrop, live promo pills, featured offer card,
+                      ZIP availability checker AND a "Call to order" button
+   4. #fiber          Fioptics tiers + symmetrical-fiber SVG panel
+   5. #bundles        dark section, Internet + TV / triple-play
+   6. #tv             Fioptics+ tiers
+   7. #phone          myChoice Basic Plus + Home Voicemail
+   8. #fine-print     inclusions/fees — table on desktop, cards on mobile
+   9. #why            staggered feature grid over parallaxed glow field
+  10. #faq            accordion, sticky intro column
+  11. Footer          dark, closing CTA, disclosure, 8 legal links
+- ServiceSection.tsx renders every service line so spacing and card treatment
+  stay identical across fiber, bundles, TV and phone.
+- Files: src/app/page.tsx, src/app/layout.tsx, src/app/globals.css,
+  src/components/{DisclosureBar,Header,Hero,ServiceSection,FinePrintGrid,WhyUs,Faq,Footer}.tsx
+
+================================================================================
+[0.8.0] 2026-09-21 — LEGAL — Eight policy pages
+================================================================================
+- src/lib/legal.ts holds all eight policies; /legal/[slug] statically generates
+  them via generateStaticParams with per-page metadata.
+    1. Privacy & Data Protection   5. Trademarks
+    2. Disclaimer                  6. Marketing Policy
+    3. Cookies Policy              7. Service Fulfillment
+    4. TCPA Policy                 8. PCI DSS
+- Each page carries a breadcrumb, a sticky index of all eight policies, and a
+  contact block. Bracketed business details are flagged for the retailer to fill
+  in, and the file is marked for attorney review before launch.
+- Files: src/lib/legal.ts, src/app/legal/[slug]/page.tsx
+
+================================================================================
+[0.8.1] 2026-09-21 — FIX — Pre-build corrections
+================================================================================
+- PlanCard glare was reading motion values once via .get(); replaced with
+  useMotionTemplate so the highlight actually tracks the cursor per frame.
+- MagneticButton gained a `type` prop; the hero ZIP form had nested a
+  <button type="submit"> inside the component's own <button>, which is invalid
+  HTML. The form now submits through the component directly.
+- Removed a stray token that corrupted the transitionTimingFunction block in
+  tailwind.config.ts.
+
+================================================================================
+[0.9.0] 2026-09-21 — FIX — Reveal fail-safe (IntersectionObserver health probe)
+================================================================================
+Found during browser QA: every scroll-triggered reveal starts hidden and relies
+on IntersectionObserver to bring it in. In the preview renderer IO callbacks
+never fired, so headlines, plan cards and the fine-print grid stayed permanently
+invisible. Any environment that starves IO — an embedded webview, an aggressive
+prerenderer, a browser without IO — would have shipped a blank page.
+- Added useIOHealth.ts: on first use it observes a throwaway 1px element. If no
+  callback arrives within 900ms, IO is marked broken process-wide.
+- Reveal, TextReveal, StaggerGrid, ClipWipe, PlanCard and FiberPath now take an
+  `animate` override that drives them to their visible state when IO is broken.
+  Healthy browsers are unaffected and keep the scroll-triggered behaviour.
+- BlackHole no longer depends on IO alone to pause: the rAF loop rect-checks
+  itself twice a second and stops when the hero scrolls away, with a passive
+  scroll listener to resume. Previously, if IO never fired, the canvas would
+  have animated forever behind the rest of the page.
+
+================================================================================
+[0.9.1] 2026-09-21 — FIX — Compliance and accessibility pass
+================================================================================
+- Hero ZIP result message linked the literal sales number as its label. Replaced
+  with "Call to order" so no raw phone number appears as a clickable label
+  outside the Navbar and Footer, per the CTA rule.
+- PriceLockup split its digits across styled spans, so screen readers announced
+  the price twice and read the integer and cents as separate numbers. The visual
+  lockup is now aria-hidden with one clean spoken string beside it.
+- legal.ts used a brittle .replace('${R}', R) on a single-quoted string;
+  converted to a proper template literal.
+
+================================================================================
+[1.0.0] 2026-09-21 — QA — Verified build
+================================================================================
+Build: `next build` clean — 12/12 static pages, home 170 kB First Load JS.
+Types: `tsc --noEmit` clean.
+
+Compliance audit (grepped across src/, all clean):
+  ✓ No support routing — the site never directs customers to the carrier for
+    billing, outages or support. Every contact path is the retailer sales line.
+  ✓ Hero contains BOTH the ZIP availability checker AND a Call button.
+  ✓ Every plan CTA reads "Call to order", or "Call for pricing" where no price
+    is listed (Internet + TV + Home Phone). No raw numbers outside Navbar/Footer.
+  ✓ No competitor bashing, no "ordering channel", no "county lines" phrasing.
+  ✓ No Cable and no Mobile sections — Hawaiian Telcom sells neither.
+  ✓ No Broadband Facts label links.
+  ✓ No "Pricing observed [Date]" stamps anywhere.
+  ✓ No FAQs about official-site status or retailer legal structure.
+  ✓ All 8 legal pages return HTTP 200 with correct titles.
+
+Layout verified at 1440x900 and 375x812:
+  ✓ No horizontal overflow at either width.
+  ✓ Fiber grid 4 columns desktop → 1 column mobile; nav collapses to hamburger;
+    fine-print table swaps to cards; ZIP form stacks.
+  ✓ Text contrast 9.4:1 to 20:1 across light and dark sections.
+
+Known items for the retailer before launch:
+  • site.salesPhone in src/lib/content.ts is a reserved fictional placeholder.
+    Replace it with your tracked sales number.
+  • site.retailerName is "Island Fiber Direct" — change to your business name.
+  • Legal pages are working drafts with bracketed address fields; have counsel
+    review them.
+  • `npm audit` reports a build-time postcss advisory inside Next's own nested
+    dependency. It affects the bundler, not shipped browser code; it clears by
+    upgrading to Next 16.
+
+================================================================================
+[1.0.1] 2026-09-21 — FIX — Header layout at the 1024–1280px band
+================================================================================
+Found during responsive QA at exactly 1024px (the old lg: breakpoint where the
+desktop nav appeared): six nav links plus the full phone CTA did not fit, so
+link labels and the CTA wrapped to three lines and burst the 76px header.
+- Desktop nav and the mobile sheet toggle moved from lg: (1024px) to xl:
+  (1280px). Between 1024 and 1280 the sheet handles navigation, leaving the
+  logo and the full "Call (XXX) XXX-XXXX" CTA on one comfortable line.
+- Added whitespace-nowrap to nav links, the header CTA, and the MagneticButton
+  base class so no button label can ever wrap.
+- Verified: header height holds at 76px and the CTA at a single 52px line
+  (previously 72px / three lines).
+
+Note for anyone rebuilding: do not run `next build` while `next dev` is running.
+The build rewrites .next and the dev server then throws React Client Manifest /
+__webpack_modules__ errors. Stop dev, `rm -rf .next`, then build.
+
+================================================================================
+[1.0.2] 2026-09-21 — FIX — Reveal fail-safe made deterministic and correct
+================================================================================
+Two problems with the [0.9.0] fail-safe, both found by instrumenting the live
+page rather than trusting it:
+
+1. It did not actually work. Handing an already-mounted motion element a new
+   `animate` prop does not reliably pull it off a half-applied transform. The
+   primitives now branch on element TYPE instead: when the reveal cannot run
+   they render plain <div>/<h1>/<span> rather than motion components, which
+   forces a clean remount with no leftover styles. PlanCard and FiberPath keep
+   their motion elements (they need hover tilt / SVG variants) and swap `key`
+   to force the same remount. TextReveal's static path keeps the gradient
+   accent, so the headline still reads the same, just without the reveal.
+   Measured with the fallback forced on: 123 hidden elements → 0.
+
+2. It fired for the wrong reason. Diagnosis of the preview tab: document.hidden
+   was true and requestAnimationFrame delivered 0 callbacks per second — even
+   the pure-CSS marquee sat frozen at currentTime 0. Browsers suspend rAF in a
+   background tab, and IntersectionObserver rides the same frame pipeline, so a
+   backgrounded tab is indistinguishable from a broken one by observation. The
+   original probe would have concluded "broken" and permanently disabled the
+   animations for anyone who opened the page in a background tab. The probe now
+   waits for visibilityState === 'visible' before it starts, and re-checks
+   visibility before concluding, retrying on the next visible moment. Nothing
+   is lost by waiting: while the tab is hidden, nobody is looking at it.
+
+Also moved the hero's promo pills and eyebrow off bare mount animations and
+onto the guarded Reveal primitive — they were the last two pieces of
+above-the-fold content not covered by the fallback.
+
+Verification note: the reveals were confirmed animating normally earlier in the
+session while the preview pane was foregrounded. The frozen-frame behaviour
+above is the browser doing the right thing for a hidden tab, not a page defect.
+
+================================================================================
+[2.0.0] 2026-09-21 — STYLE — Light, vibrant theme rebuilt on the exact palette
+================================================================================
+Client review: the site read as dark-themed, several headings were invisible,
+and the hero carried animation and copy that were not wanted. Full pass:
+
+PALETTE — restricted to verbatim hawaiiantel.com values, no generated ramps.
+  #4294F7 blue · #005BB5 blue-deep · #072B6F blue-navy · #012639 navy
+  #101014 ink · #394758 slate · #515156 gray · #82939B muted
+  #C6C6CA border · #EBEBED border-light · #EDF5FF tint · #F6F6FA surface
+  #22D3C5 · #3DC37F · #FC8A52 · #F6D051 · #ED358E · #EB3853 · #7D61B3 accents
+- Surfaces are now white / #F6F6FA / #EDF5FF, matching the brand's own site.
+  Navy is reserved for the disclosure bar, the fine-print table head and the
+  footer. The 11-step tonal ramps invented in [0.2.0] are gone; a scripted
+  remap rewrote every legacy token across src/.
+- Dropped the three-colour "fiber gradient" in favour of flat #4294F7 fills.
+
+HERO — rebuilt.
+- Removed the "Built in Hawaiʻi. For Hawaiʻi." eyebrow.
+- Deleted BlackHole.tsx entirely: no canvas, no starfield, no background
+  animation of any kind.
+- Removed the secondary "Call to order" + business-hours row beneath the ZIP
+  field. A call CTA remains in the hero via the offer card, and in the header.
+- Headline now mirrors the brand's own: "100% Real Fiber Internet." in ink over
+  "Prices starting at just $30/mo." in blue.
+- Offer card restyled after bestfiberinternet.us / kineticfiber.us: solid blue
+  header band carrying the offer, white body, a proper price row and a full
+  width CTA — replacing the generic translucent panel.
+- The card is NOT wrapped in a scroll reveal. Above-the-fold content must never
+  wait on an observer.
+- Trust marquee now sits on the brand's full-width blue band.
+
+SECTIONS
+- Deleted FiberPath.tsx and the symmetrical-fiber panel from the fiber section.
+- ServiceSection heading block changed from a two-column split to one stacked
+  column (eyebrow → title → lede) on a `.section-head` rhythm. The split layout
+  was what left a dead gap beside every section title on wide screens.
+- Fine-print and Why-Us ledes rewritten to a professional register; both now
+  live in content.ts as finePrintLede / whyLede.
+
+RENAME
+- site.retailerName is now "Hawaiian Telcom" throughout, including all eight
+  legal pages. Because the retailer and the carrier now share a label, sixteen
+  legal sentences that contrasted the two would have collapsed into tautologies
+  ("Hawaiian Telcom is an independent authorized retailer of Hawaiian Telcom").
+  Every policy was rewritten to refer to the retailer in the first person and
+  reserve the brand name for the carrier, so each disclosure still reads
+  correctly. The `R` constant was removed from legal.ts to prevent regressions.
+- The disclosure bar, footer disclosure and Disclaimer continue to state
+  plainly that the site is operated by an independent authorized retailer and
+  not by the carrier, and that the retailer may be compensated on an order.
+
+FOOTER — rebuilt on the bestfiberinternet.us structure
+- Call CTA band, then four columns: Shop · Learn · Talk to a human · Legal &
+  compliance, then the full reseller disclosure and pricing fine print, then
+  copyright and trademark attribution. Navy surface, blue hover states.
+
+================================================================================
+[2.0.1] 2026-09-21 — FIX — Root cause of the invisible headings
+================================================================================
+Every H2 on the site was invisible in a healthy browser, and the reason was not
+the background-tab freezing diagnosed in [1.0.2].
+
+TextReveal wrapped each word in an `overflow-hidden` span and parked it at
+translateY(108%) until it scrolled into view. IntersectionObserver clips a
+target's intersection rect against its ancestors' overflow — so a word sitting
+entirely below its own clipping parent reports isIntersecting:false forever. The
+reveal could never fire. It is self-defeating by construction: the element hid
+itself in the one place the observer watching it cannot see.
+
+That is why the symptom was so selective — eyebrows and paragraphs used opacity
+and stayed in the observer's view, so they revealed normally; only the clipped
+headings vanished.
+
+Fix: headings no longer use a scroll-triggered transform at all. `Heading`
+renders plain markup with a CSS `rise` keyframe. Two deliberate choices:
+  • transform-only, NO opacity — a heading must be legible at every frame,
+    including frame zero, which is where a background tab freezes it. A 14px
+    offset costs nothing; an invisible headline costs the page.
+  • `animation-fill-mode: forwards`, not `both` — with `forwards` the element's
+    default style is its visible state, so a heading whose animation never
+    starts still renders. `both` would back-fill the hidden start frame.
+Verified: all 10 page headings report opacity 1 in a frozen background tab.
+
+Also fixed while verifying the rebuilt cards:
+- The "Most popular" badge sat beside the plan name and stole enough width to
+  wrap that one card's title onto two lines, knocking the row of titles out of
+  alignment. The badge now has its own row, reserved on every card.
+- "600 Mbps down · 600 Mbps up" was the one speed string long enough to wrap at
+  a quarter-width card. Every tier is symmetrical, so it now reads
+  "600 Mbps symmetrical" — same fact, one line.
+- Verified across all four plan grids: every title one line, every card in a row
+  the same height.
+
+================================================================================
+[2.0.2] 2026-09-21 — QA — Full visual + compliance verification of the rebuild
+================================================================================
+Build: `next build` clean — 12/12 static pages, home 7.39 kB / 164 kB First Load.
+Types: `tsc --noEmit` clean. All 8 legal routes return HTTP 200.
+
+Verified visually at 1440px, every section:
+  ✓ Hero — light, no background animation, headline visible, offer card with
+    solid blue header band, ZIP field, promo checkmarks.
+  ✓ Fiber / Bundles / TV / Phone — headings visible, no gap under the title,
+    no fiber-path panel.
+  ✓ Fine print — heading visible, professional lede, navy table head.
+  ✓ Why Hawaiian Telcom — heading visible, professional lede, 6-card grid on
+    the pale blue surface.
+  ✓ FAQ — heading visible, sticky intro column, accordion.
+  ✓ Footer — Call-now band, four columns (Shop / Learn / Talk to a human /
+    Legal & compliance), disclosure, copyright.
+
+Plan-card geometry, measured across all four grids:
+  ✓ Every plan title on one line; all titles aligned on the same offset.
+  ✓ Every card in a row the same height (fiber 788 · tv 678 · phone 564 ·
+    bundles 615).
+
+Responsive at 375px:
+  ✓ No horizontal overflow. Grids collapse to one column. Nav collapses to the
+    sheet. Fine-print table swaps to cards. H1 scales to 40px.
+  ✓ All headings report opacity 1.
+
+Compliance re-audit after the copy rewrite — all nine constraints clean:
+  ✓ No support routing to the carrier   ✓ Hero has ZIP + call CTA
+  ✓ All plan CTAs "Call to order" / "Call for pricing" via ctaLabel()
+  ✓ No raw phone numbers outside the navbar and footer
+  ✓ No competitor bashing                ✓ No cable or mobile sections
+  ✓ No Broadband Facts links             ✓ No date stamps
+  ✓ No official-site / legal-structure FAQs
+
+Outstanding before launch (unchanged):
+  • site.salesPhone — reserved fictional placeholder, needs the real number.
+  • [Street Address] / [City], HI [ZIP] — in the footer and in legal.ts.
+  • Attorney review of all eight policies, particularly given the site trades
+    under the carrier's brand name.
+
+================================================================================
+[2.1.0] 2026-09-21 — MEDIA — Photography added across the site
+================================================================================
+Seven images supplied, generated with Gemini (Nano Banana), delivered as PNGs at
+1408x768 totalling 20.7 MB.
+
+OPTIMISATION — 20.7 MB -> 0.71 MB (96.6% smaller), via sharp:
+  hero-home           2620 KB -> 89 KB    fiber-install   2907 KB -> 119 KB
+  bundle-living-room  2719 KB -> 75 KB    tv-fioptics     2825 KB -> 65 KB
+  phone-kupuna        3285 KB -> 102 KB   why-neighborhood 3530 KB -> 157 KB
+  og-share            3357 KB -> 120 KB (kept JPEG — some social scrapers still
+                                         refuse WebP)
+  Re-encoded at source resolution; no upscaling. PNG originals removed.
+
+PLACEMENT
+  Hero              full-bleed background, priority, blur placeholder
+  Fiber             full-width band with an overlaid caption
+  Bundles           split panel, image left
+  TV                split panel, image right
+  Phone             split panel, image left
+  Why Hawaiian Telcom  full-width banner with an overlaid caption
+  og-share          OpenGraph + Twitter summary_large_image metadata
+
+IMPLEMENTATION
+- Static imports throughout, so Next emits intrinsic dimensions and a blur
+  placeholder at build time, and a missing or renamed file fails the build
+  rather than shipping a broken image.
+- ServiceSection gained an optional `media` prop (`band` | `split`, with a side)
+  so all four service sections stay on one component.
+- Every slot reserves its box before the image loads — no layout shift.
+- Hero alt is intentionally empty: it is decorative and the headline beside it
+  already carries the meaning. The six content images have descriptive alt.
+
+FIXES FOUND WHILE WIRING
+1. Hero photograph was invisible. The first scrim used Tailwind's evenly-spaced
+   gradient stops, which kept the overlay near-opaque across the whole frame
+   while the offer card covered the rest. Replaced with explicit colour stops
+   (solid to 34%, gone by 66%) so the right half of the image reads.
+2. Offer card had no background at all. `bg-white/92` is not a step Tailwind
+   generates, so the class produced nothing and the card rendered transparent —
+   small grey body copy over a busy photograph. Card is now solid white.
+3. Band and banner captions were unreadable. Same root cause, worse effect:
+   `from-ht-navy/92` failed to generate, which left --tw-gradient-from undefined,
+   which invalidated the entire var(--tw-gradient-stops) chain and collapsed
+   background-image to `none`. Both captions now use an explicit inline
+   linear-gradient, which cannot fail this way.
+4. Audited every opacity modifier in src/ and normalised the five remaining
+   non-standard steps (/45 /55 /65 /85) to generated ones, removing the whole
+   class of silent failure.
+5. "neighbourhood" -> "neighborhood"; the site is US English throughout.
+
+NOTED, NOT CHANGED
+- Every image carries Gemini's visible sparkle watermark inset from the
+  bottom-right, clearly visible on the hero. Left in place deliberately: it
+  marks the image as AI-generated and removing it would strip a provenance
+  signal. Regenerating on a tier that does not apply the visible mark is the
+  correct fix. Invisible SynthID watermarking persists regardless.
+- Source images are 1408px wide, so the hero is slightly soft on a 2x display.
+  The white scrim hides this well.
+- A laptop with a visible Apple mark appears in hero-home.webp. Incidental use,
+  but this site publishes a Trademarks policy — worth a review before launch.
+
+================================================================================
+[2.2.0] 2026-09-22 — STYLE — Hero rebuilt; copy raised to a professional register
+================================================================================
+Client review: the hero read as generic, the promotion was "an old generic box",
+the headline lacked emphasis, several section titles were too conversational,
+Why Hawaiian Telcom felt generic, and the page wanted vibrant animated colour.
+
+HERO — rebuilt
+- The full-bleed background + scrim approach is gone. It produced a muddy middle
+  ground where the photograph was neither a clean backdrop nor a proper feature,
+  and the offer panel covered whatever was left. The photograph is now contained
+  in a shaped rounded frame with its own composition.
+- The promotion is no longer a boxed card. It renders as a tag clipped to the
+  photograph's lower-left corner, carrying an animated brand-gradient rule down
+  its leading edge, a live pulse indicator, the rate set large, and a sheen that
+  passes across on a loop. On small screens it drops into normal flow beneath the
+  frame.
+- Headline emphasis: a marker-style highlight wipes in behind the rate line,
+  which is the single most important phrase in the hero.
+- Added an eyebrow rule, and a floating "3 Gbps / up & down" chip on the frame.
+- Entrance choreography via framer-motion: eyebrow, headline lines, subhead,
+  trust marks and ZIP field enter on a staggered spring. Deliberately
+  MOUNT-driven, not scroll-driven — nothing above the fold may wait on an
+  observer, which is what stranded the old headings.
+
+GradientField.tsx — new
+- Vibrant animated colour for section backgrounds: three blurred radial blobs
+  drifting on transform only. No canvas, no JavaScript, nothing that touches
+  layout. Colours are the exact scraped hexes (#4294F7, #22D3C5, #3DC37F) at low
+  alpha over white, so the page stays bright rather than tinted.
+- `bold` in the hero, `soft` behind fiber, bundles, TV, phone, fine print and
+  FAQ. Decorative, so aria-hidden and pointer-events-none throughout.
+- prefers-reduced-motion freezes it to a static wash via the global rule.
+
+WHY HAWAIIAN TELCOM — refined
+- Added a navy metric band leading with the three figures that matter (3 Gbps,
+  99.99%, 1883) over an internal brand-gradient wash, each entering on a stagger.
+- Feature cards reworked: tinted icon chip that fills with brand blue on hover,
+  and a gradient rule that draws across the top edge. The flat white cards with a
+  coloured number were the generic part.
+
+COPY — professional register
+  "Symmetrical fiber, all the way to the house."
+    -> "Fiber optic service delivered directly to the residence."
+  "Bundle it, and the rate drops."
+    -> "Combine services and reduce your monthly rate."
+  "Live TV and your streaming apps, one guide."
+    -> "Live television and streaming, unified in one guide."
+  "A landline that still makes sense."
+    -> "Home voice service built for reliability."
+  "A line that works when everything else stops."
+    -> "Service that remains available during an outage."
+  "What is included, and what costs extra."
+    -> "Complete disclosure of inclusions and applicable fees."
+  "A fiber network built for these islands."
+    -> "Infrastructure engineered for the Hawaiian Islands."
+  "Fiber run the whole way to the house."
+    -> "Fiber terminated at your property."
+  "One account, one bill, one install."
+    -> "A single account, one bill, one installation."
+  "Your channels and your apps in one place."
+    -> "Channels and applications in a single interface."
+  "Street by street, across the islands."
+    -> "Expanding across the islands, address by address."
+  Supporting body copy under each was raised to match, and every `accentFrom`
+  index was re-pointed so the blue phrase still falls on the right words.
+- "1883 / Serving Hawaiʻi since" read backwards as a value-and-label pair;
+  the label is now "Established in Hawaiʻi".
+
+Verified: build clean, 12/12 static. Headings all report opacity 1. No
+horizontal overflow at 375px, where the offer tag returns to normal flow.
+
+================================================================================
+[2.3.0] 2026-09-22 — ANIMATION — Hero motion deepened; colour field per section
+================================================================================
+HERO — additional motion
+- Word-by-word headline reveal, each word rising and rotating on its X axis from
+  a bottom origin. Deliberately NOT clipped by an overflow-hidden parent: that
+  construction hides the element outside the very box an observer measures, and
+  is what left every heading on this site invisible once before. These animate on
+  mount, on transform and opacity only.
+- Animated gradient sweeping through the rate line, clipped to the glyphs and
+  travelling continuously (#4294F7 → #22D3C5 → #3DC37F → #7D61B3).
+- Cursor-tracking spotlight across the whole hero: a soft blue/teal radial that
+  follows the pointer on a spring. Skipped for reduced motion and coarse
+  pointers, so it never runs on touch.
+- Rotating conic halo around the photo frame, in the four brand colours.
+- Slow scale drift on the photograph — a restrained Ken Burns over 24s.
+- Scroll-linked parallax: the photo frame drifts as the hero scrolls away.
+- Second floating statistic ("99.99% reliability") joining the 3 Gbps chip, each
+  on its own float cycle, both now frosted with a backdrop blur.
+- Scroll cue at the foot of the section.
+
+GRADIENT FIELD — richer and per-section
+- Added a fourth layer: a wide aurora ribbon sweeping across the middle band.
+- Raised blob opacity (soft 0.28→0.40, bold 0.50→0.60).
+- Added a `variant` prop so each section gets its own colour mix, and the page
+  moves through a shifting field rather than repeating one wash six times:
+    hero blue · fiber blue · bundles teal · TV violet · phone green
+    fine print sunrise · why teal · FAQ violet
+  Sunrise is the only variant using #FC8A52 and #F6D051, both scraped hexes.
+- Still transform/opacity only, no canvas, no JavaScript.
+
+FIXES FOUND WHILE BUILDING THIS
+1. The rotating conic halo rendered as a giant diamond behind the photograph.
+   Spinning a rounded rectangle sweeps its corners far outside its own box. The
+   rotating layer now lives inside a clipping wrapper and is oversized (160%),
+   so only the glow shows.
+2. The accent headline went completely invisible. `background-clip: text` was on
+   the wrapper while each word carried its own transform — a transformed child
+   establishes its own painting context, so the parent's clip cannot reach the
+   child's glyphs, yet `color: transparent` still inherits down. The gradient now
+   sits on each word span. Verified in the DOM: every word reports both a
+   gradient background-image and `background-clip: text`.
+3. `.text-gradient-sweep` paints solid #4294F7 by default and only becomes
+   transparent inside an `@supports` guard, so a browser that cannot clip a
+   background to text still renders a readable headline.
+4. The reliability chip sat over the subject's face; moved clear.
+
+Note: one build failed with a next/font error fetching Google Fonts
+("Cannot read properties of null"). Transient network failure at build time,
+unrelated to any change here — the identical build succeeded on retry.
+
+Verified: build clean, 12/12 static, 176 kB First Load JS. All 8 page headings
+carry rendered text. Scroll reveals confirmed transitioning 0 → 1 on entry, with
+nothing left hidden once a section is in view.
+
+================================================================================
+[2.3.1] 2026-09-22 — FIX — Headline legibility and the photo frame treatment
+================================================================================
+1. ROTATING CONIC HALO REMOVED.
+   Even clipped, the spinning border threw hard-edged teal wedges past the
+   photograph's corners and read as a gimmick rather than a finish. Replaced
+   with a still, blurred brand glow bedded under the frame — quieter, more
+   expensive-looking, and cheaper to composite. Verified on the live page: zero
+   conic layers and zero spinning elements remain in the hero.
+
+2. HEADLINE GRADIENT WAS AN ACCESSIBILITY FAILURE, NOT JUST A PALE ONE.
+   The rate line ran through #22D3C5 and #3DC37F, measured against white:
+       #4294F7  3.08:1  pass        #22D3C5  1.88:1  FAIL
+       #7D61B3  4.96:1  pass        #3DC37F  2.26:1  FAIL
+   WCAG requires 3:1 for large text, so roughly half of "at just $30/mo." was
+   below the readability floor — which is exactly how it looked on screen.
+   The gradient is now blues only, every stop clearing the threshold:
+       #4294F7 3.08:1 → #005BB5 6.64:1 → #072B6F 13.26:1 → #005BB5 → #4294F7
+   Teal and green remain in the background colour fields, where they sit behind
+   nothing that has to be read.
+
+3. MARKER BAND strengthened — held at full strength to 68% of its length rather
+   than fading immediately, so the whole rate line sits on even backing instead
+   of trailing off into the colour field.
+
+The `spin-slow` keyframe is now unreferenced; Tailwind emits keyframes only for
+animation utilities that appear in the source, so no dead CSS ships.
+
+================================================================================
+[2.3.2] 2026-09-22 — FIX — Fonts self-hosted; build no longer needs the network
+================================================================================
+The next/font Google Fonts failure logged as "transient" in [2.3.0] recurred, so
+it is not transient — it is a standing fragility. `next/font/google` fetches the
+stylesheet and the font binaries from Google at BUILD time, so any network blip
+fails the build outright:
+
+    An error occurred in `next/font`.
+    TypeError: Cannot read properties of null (reading '1')
+
+Confirmed independently: a plain Node `fetch()` to fonts.googleapis.com timed out
+from this machine while `curl` to the same host succeeded, which is exactly the
+intermittent reachability that breaks the build. Locally this is an annoyance;
+in CI it is a red pipeline on a commit that changed nothing.
+
+FIX — both faces are now self-hosted via next/font/local:
+    src/app/fonts/PlusJakartaSans-latin.woff2      26.7 KB
+    src/app/fonts/PlusJakartaSans-latin-ext.woff2  21.2 KB
+    src/app/fonts/Inter-latin.woff2                47.1 KB
+    src/app/fonts/Inter-latin-ext.woff2            83.1 KB
+- Variable weight axes, so one file per subset covers every weight in use.
+- latin-ext is included because it carries the macron in Hawaiian place names.
+- Explicit `fallback` stacks so a failed font load degrades to Helvetica/Arial
+  rather than an unstyled default.
+
+Secondary benefits:
+- Builds are now reproducible and network-independent, byte-identical each run.
+- Drops the runtime connection to fonts.gstatic.com — one fewer third party
+  receiving visitor IP addresses, which matters for the privacy policy this site
+  publishes.
+
+Verified on the live page: document.fonts reports both families loaded, the h1
+resolves to the display face, and performance.getEntriesByType('resource')
+returns ZERO requests to googleapis or gstatic.
+
+================================================================================
+[2.4.0] 2026-09-22 — COMPONENT — Shared icon set; icons added to cards
+================================================================================
+Audit first: PlanCard carried only a feature checkmark, FinePrintGrid had no
+icons at all, and WhyUs kept a private icon set of its own — which is how two
+icon styles end up drifting apart on the same page.
+
+NEW — src/components/Icons.tsx, the site's single icon set.
+- 16 glyphs on one 24x24 grid at 1.7 stroke, round caps and joins, all inheriting
+  currentColor so an icon takes its container's colour with no fill override.
+    service lines  fiber · bundle · tv · phone
+    feature grid   shield · sync · price · island · wifi
+    inclusions     data · activation · equipment · billing · term · speed ·
+                   availability
+- Every icon is decorative and sits beside text that already carries the meaning,
+  so all are aria-hidden with focusable="false" rather than labelled — a label
+  here would simply be announced twice.
+
+APPLIED
+- PlanCard: a service-line badge in the card header, keyed off `plan.serviceLine`.
+  Tinted by default, filling with brand blue on hover, and solid blue on the
+  popular card. The badge shares the row previously reserved for "Most popular",
+  so titles stay aligned across the grid.
+- FinePrintGrid: an icon per row in both presentations — inline beside the row
+  header in the desktop table, and in a tinted chip in the mobile cards.
+- WhyUs: private icon component deleted; now imports the shared set.
+
+DATA
+- `FinePrintRow` gained a typed `icon` field and all seven rows were populated,
+  so the icon choice lives in content.ts beside the copy it labels rather than
+  as a lookup table buried in a component. Adding a row now requires an icon,
+  enforced by the type.
+
+Verified on the live page: 4/4 plan cards carry a line icon, 7/7 table rows and
+7/7 mobile cards carry a row icon, 6/6 feature cards render, and zero icons are
+missing aria-hidden.
+
+================================================================================
+[3.0.0] 2026-09-22 — BUILD — Static HTML export
+================================================================================
+The site now builds to plain HTML. `npm run build` emits an `out/` folder of
+real .html files plus the CSS, JS, fonts and images they reference, deployable
+to any static host with no Node runtime behind it.
+
+APPROACH — Next's static export, not a hand-written rewrite.
+The requirement was that everything stay the same, so the safest path was to
+pre-render the existing code rather than reimplement it in vanilla HTML/CSS/JS.
+A hand rewrite would have meant rebuilding the framer-motion choreography by
+hand and would inevitably have drifted from the original. The export ships the
+identical markup, styles and scripts — only the delivery changes.
+
+PRE-FLIGHT — verified nothing blocked export:
+  no API routes · no middleware · no server actions
+  /legal/[slug] already supplies generateStaticParams
+
+CONFIG — next.config.mjs
+  output: 'export'          emit static HTML
+  trailingSlash: true       /legal/privacy/index.html, so hosts resolve the URL
+                            without rewrite rules
+  images: { unoptimized: true }
+                            the image optimizer is a server feature. No loss
+                            here: the set was already re-encoded to WebP at
+                            0.71 MB, and blur placeholders survive because they
+                            are inlined as base64 at build time.
+
+OUTPUT — 11 HTML files, 3.5 MB total
+  index.html 171 KB · css 32 KB · js 1.04 MB · fonts 178 KB
+  All 10 routes verified serving 200 from plain files.
+
+VERIFIED IN THE EXPORT — nothing lost
+  ✓ 13 CSS animations live: drift-a, drift-b, ribbon, marker, drift-scale,
+    float-y, sweep, shimmer, pulse-ring, cue, marquee, rise (+ framer-motion)
+  ✓ Headline gradient stops intact; 24 gradient-field layers; 94 inline icons;
+    6 images with blur placeholders
+  ✓ React hydrates: ZIP validation, FAQ accordion and mobile nav all toggle
+  ✓ ZERO external requests — the self-hosted fonts from [2.3.2] mean the page
+    contacts nothing but its own origin
+  ✓ index.html is genuine pre-rendered markup (plan names, prices and copy are
+    in the HTML), not a JavaScript shell — so it indexes without execution
+
+NOTED
+- out/images/ carries plain-named copies of the six section photographs that
+  nothing requests; pages use content-hashed copies under _next/static/media for
+  caching. Harmless — they are never fetched — but they can be pruned from an
+  upload. og-share.jpg must stay, as the social card metadata points at it.
+- Serve over HTTP, not file://: assets are root-relative (/_next/...).
+- Subfolder hosting needs basePath + assetPrefix set before building.
+
+Added `npm run preview` to serve out/ locally, and a deployment section in
+README.md.
