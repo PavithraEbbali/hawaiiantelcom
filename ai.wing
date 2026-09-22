@@ -748,3 +748,60 @@ NOTED
 
 Added `npm run preview` to serve out/ locally, and a deployment section in
 README.md.
+
+================================================================================
+[3.1.0] 2026-09-22 — RESPONSIVE — Mobile pass, then published to GitHub
+================================================================================
+AUDIT — measured at 320, 375, 768, 1024 and 1440 px.
+Layout and type were already sound: no horizontal overflow at any width, grids
+collapsing correctly, nav folding to a sheet below 1280, the fine-print table
+swapping to cards below 1024, h1 at 40px and body at 18px on a 320px screen, and
+the only sub-40px tap target being the sr-only skip link.
+
+The problem was the animation budget, not the layout.
+
+On a 320x720 viewport (0.23 megapixels) the page was compositing 33 blurred
+layers covering 12.1 MEGAPIXELS of blurred surface — roughly fifty times the
+screen area, repainting every frame — plus 59 elements carrying `will-change`,
+each pinning a layer in GPU memory. A large blur is among the most expensive
+things a browser can composite and the cost scales with area, so on a mid-range
+phone this means dropped frames, a warm device and a flat battery.
+
+FIXES
+- GradientField now runs at half strength below `sm`: two blobs instead of four
+  (the third blob and the aurora ribbon are `hidden sm:block`), blur radius
+  52px instead of 110px, and tighter sizes. Layers return at `sm` and above, so
+  desktop is visually unchanged.
+- Removed `will-change` from the gradient blobs, the hero photograph, the conic
+  layer and the parallax wrapper: all are already transform-animated, so the
+  browser promotes them anyway and the hint only pinned extra layers.
+- Scoped the remaining two `will-change` hints to `lg`. They sit on the magnetic
+  button and the 3D tilt card, both of which are skipped on coarse pointers —
+  so a phone was paying for effects it never receives.
+- Hero photograph min height 20rem -> 17rem, so the frame does not dominate a
+  small screen before any copy is reached.
+- Header wordmark held on one line and the "Authorized Retailer" sub-line hidden
+  below `sm`. At 320px it broke across two rows and stopped reading as a mark;
+  the disclosure bar directly above states the relationship in full anyway.
+
+RESULT at 320px:  blurred surface 12.1 MP -> 1.9 MP (84% less)
+                  will-change layers 59 -> 0
+                  running animations 45 -> 29
+Desktop at 1440px re-verified unchanged: full four-layer fields, nav visible,
+no overflow.
+
+PUBLISHED
+- git init, single commit, pushed to
+  https://github.com/PavithraEbbali/hawaiiantelcom (branch main).
+- 45 files. node_modules, .next and out/ excluded; the self-hosted fonts and the
+  seven images are committed, since the build needs them.
+- Removed a leftover one-off font-download script before committing.
+
+VERCEL READINESS
+- `npm ci --dry-run` passes, so the lockfile is in sync with package.json —
+  the usual cause of a Vercel build failing when local builds work.
+- Added engines.node >=18.18.0 so a future change to Vercel's default Node
+  cannot silently break the build.
+- No vercel.json needed: Vercel detects Next.js, runs the build and serves the
+  exported out/ folder. No environment variables. The build touches no network,
+  because the fonts are committed.

@@ -45,6 +45,35 @@ Two things worth knowing:
   `assetPrefix` set to that folder in `next.config.mjs` before building.
   Root-level hosting needs no change.
 
+## Deploying to Vercel
+
+Zero configuration. Import the repository at
+[vercel.com/new](https://vercel.com/new) and deploy — Vercel detects Next.js,
+runs `npm ci && npm run build`, and serves the exported `out/` folder as static
+files. No environment variables, no build settings, no `vercel.json`.
+
+The build is fully self-contained: fonts are committed rather than fetched from
+Google, so nothing external can fail it.
+
+Because `output: 'export'` is set, Vercel's on-demand image optimization is not
+used — images ship pre-optimized instead (0.71 MB for the whole set). If you
+later want Vercel to optimize images per request, remove `output: 'export'` and
+`images.unoptimized` from `next.config.mjs`; the site then runs as a normal
+Next.js app on Vercel and you lose only the plain-HTML `out/` folder.
+
+## Responsive behaviour
+
+Verified at 320, 375, 768, 1024 and 1440 px: no horizontal overflow at any
+width, grids collapse cleanly, the nav folds into a sheet below 1280 px, and the
+fine-print table swaps to cards below 1024 px.
+
+Animation is budgeted for phones. A large blur is one of the most expensive
+things a browser composites, so below `sm` the background gradient fields drop
+from four layers to two with a much smaller blur radius, and `will-change` hints
+are scoped to `lg` — the magnetic-button and 3D-tilt effects they support are
+skipped on touch anyway. That takes the blurred surface on a 320 px screen from
+~12 megapixels down to ~1.9, with zero pinned compositor layers.
+
 `out/images/` also contains plain-named copies of the six section photographs.
 Nothing requests them — the pages use content-hashed copies under
 `_next/static/media/` for better caching — so they are safe to delete from the
